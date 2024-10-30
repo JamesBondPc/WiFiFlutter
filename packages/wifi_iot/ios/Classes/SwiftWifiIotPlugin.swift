@@ -1,5 +1,7 @@
 import Flutter
-import UIKit
+import UIKit 
+import Foundation
+import SystemConfiguration
 import SystemConfiguration.CaptiveNetwork
 import NetworkExtension
 
@@ -353,8 +355,26 @@ public class SwiftWifiIotPlugin: NSObject, FlutterPlugin {
     }
 
     private func getWiFiAPSSID(result: FlutterResult) {
-        result(FlutterMethodNotImplemented)
+     if let ssid = fetchSSIDInfo() {
+            result(ssid)
+        } else {
+            result(FlutterError(code: "ERROR", message: "SSID not available", details: nil))
+        }
     }
+
+    private func fetchSSIDInfo() -> String? {
+       var ssid: String?
+       if let interfaces = CNCopySupportedInterfaces() as NSArray? {
+        for interface in interfaces {
+            if let interfaceInfo = CNCopyCurrentNetworkInfo(interface as! CFString) as NSDictionary? {
+                ssid = interfaceInfo[kCNNetworkInfoKeySSID as String] as? String
+                break
+            }
+        }
+    }
+    return ssid
+    }
+
 
     private func setWiFiAPSSID(call: FlutterMethodCall, result: FlutterResult) {
         let arguments = call.arguments
